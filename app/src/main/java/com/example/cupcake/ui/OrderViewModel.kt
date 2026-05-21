@@ -16,11 +16,17 @@
 package com.example.cupcake.ui
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.cupcake.data.CupcakeOrder
+import com.example.cupcake.data.CupcakeRepository
 import com.example.cupcake.data.OrderUiState
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -36,11 +42,33 @@ private const val PRICE_FOR_SAME_DAY_PICKUP = 3.00
  * [OrderViewModel] holds information about a cupcake order in terms of quantity, flavor, and
  * pickup date. It also knows how to calculate the total price based on these order details.
  */
-class OrderViewModel : ViewModel() {
+class OrderViewModel(
+    private val repository: CupcakeRepository
+) : ViewModel() {
 
-    /**
-     * Cupcake state for this order
-     */
+    val orderHistory: StateFlow<List<CupcakeOrder>> =
+        repository.getAllOrders()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
+
+    fun saveOrder() {
+
+        viewModelScope.launch {
+
+            repository.insertOrder(
+
+                CupcakeOrder(
+                    quantity = uiState.value.quantity,
+                    flavor = uiState.value.flavor,
+                    pickupDate = uiState.value.date,
+                    price = uiState.value.price
+                )
+            )
+        }
+    }
     private val _uiState = MutableStateFlow(OrderUiState(pickupOptions = pickupOptions()))
     val uiState: StateFlow<OrderUiState> = _uiState.asStateFlow()
 

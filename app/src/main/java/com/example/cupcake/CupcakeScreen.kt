@@ -47,6 +47,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.cupcake.data.DataSource
 import com.example.cupcake.data.OrderUiState
+import com.example.cupcake.ui.AppViewModelProvider
 import com.example.cupcake.ui.OrderSummaryScreen
 import com.example.cupcake.ui.OrderViewModel
 import com.example.cupcake.ui.SelectOptionScreen
@@ -72,6 +73,7 @@ fun CupcakeAppBar(
     navigateUp: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+
     TopAppBar(
         title = { Text(stringResource(currentScreen.title)) },
         colors = TopAppBarDefaults.mediumTopAppBarColors(
@@ -93,7 +95,9 @@ fun CupcakeAppBar(
 
 @Composable
 fun CupcakeApp(
-    viewModel: OrderViewModel = viewModel(),
+        viewModel: OrderViewModel = viewModel(
+        factory = AppViewModelProvider.Factory
+    ),
     navController: NavHostController = rememberNavController()
 ) {
     // Get current back stack entry
@@ -161,20 +165,22 @@ fun CupcakeApp(
             }
             composable(route = CupcakeScreen.Summary.name) {
                 val context = LocalContext.current
-                OrderSummaryScreen(
-                    orderUiState = uiState,
-                    onCancelButtonClicked = {
-                        cancelOrderAndNavigateToStart(viewModel, navController)
-                    },
-                    onSendButtonClicked = { subject: String, summary: String ->
-                        shareOrder(context, subject = subject, summary = summary)
-                    },
-                    modifier = Modifier.fillMaxHeight()
-                )
+                    OrderSummaryScreen(
+                        orderUiState = uiState,
+                        onSendButtonClicked = { subject: String, summary: String ->
+                            viewModel.saveOrder()
+                            shareOrder(context, subject = subject, summary = summary)
+                        },
+                        onCancelButtonClicked = {
+                            cancelOrderAndNavigateToStart(viewModel, navController)
+                        },
+                        modifier = Modifier.fillMaxHeight()
+                    )
+                }
             }
         }
     }
-}
+
 
 /**
  * Resets the [OrderUiState] and pops up to [CupcakeScreen.Start]
