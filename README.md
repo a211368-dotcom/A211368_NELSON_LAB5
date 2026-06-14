@@ -1,5 +1,4 @@
-# Lab 5 - Web Development Practice
-
+# Lab 5 - Room
 ## Project Description
 This lab is a web development exercise using HTML and CSS. It focuses on improving understanding of web page structure, styling, and layout design. The lab demonstrates the ability to build a simple but structured web page system.
 
